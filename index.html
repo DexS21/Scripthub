@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scriptblox Script Hub</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #121212;
+            color: #f5f5f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        h1 {
+            color: #fff;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        #search-container {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #search-bar {
+            padding: 12px;
+            font-size: 16px;
+            width: 300px;
+            margin-right: 10px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background-color: #333;
+            color: #fff;
+        }
+        #search-btn {
+            padding: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #2575fc;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s ease;
+        }
+        #search-btn:hover {
+            background-color: #6a11cb;
+        }
+        .script-card {
+            background-color: #1e1e1e;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+        .script-card:hover {
+            transform: translateY(-5px);
+        }
+        .script-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        }
+        .script-game {
+            font-size: 14px;
+            color: #aaa;
+        }
+        .script-link {
+            display: block;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #2575fc;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 8px;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+        .script-link:hover {
+            background-color: #6a11cb;
+        }
+        #loading {
+            display: none;
+            font-size: 16px;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Scriptblox Script Hub</h1>
+
+    <div id="search-container">
+        <input type="text" id="search-bar" placeholder="Enter script or game name">
+        <button id="search-btn">Search</button>
+    </div>
+
+    <div id="loading">Loading...</div>
+
+    <div id="scripts-container"></div>
+
+    <script>
+        const searchButton = document.getElementById('search-btn');
+        const searchBar = document.getElementById('search-bar');
+        const scriptsContainer = document.getElementById('scripts-container');
+        const loadingIndicator = document.getElementById('loading');
+
+        searchButton.addEventListener('click', () => {
+            const query = searchBar.value.trim();
+            if (query) {
+                searchScripts(query);
+            } else {
+                alert('Please enter a search query');
+            }
+        });
+
+        async function searchScripts(query) {
+            loadingIndicator.style.display = 'block';
+            scriptsContainer.innerHTML = '';
+
+            const url = `https://scriptblox-api-proxy.vercel.app/api/search?q=${query}`;
+
+            try {
+                const response = await fetch(url);
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (data.result && data.result.scripts && data.result.scripts.length > 0) {
+                        data.result.scripts.forEach(script => {
+                            const scriptCard = document.createElement('div');
+                            scriptCard.classList.add('script-card');
+
+                            const scriptTitle = document.createElement('div');
+                            scriptTitle.classList.add('script-title');
+                            scriptTitle.textContent = script.title;
+
+                            const scriptGame = document.createElement('div');
+                            scriptGame.classList.add('script-game');
+                            scriptGame.textContent = `Game: ${script.game.name}`;
+
+                            const executeLink = document.createElement('button');
+                            executeLink.classList.add('script-link');
+                            executeLink.textContent = 'Copy Script';
+
+                            executeLink.addEventListener('click', () => copyScriptToClipboard(script.script));
+
+                            scriptCard.appendChild(scriptTitle);
+                            scriptCard.appendChild(scriptGame);
+                            scriptCard.appendChild(executeLink);
+
+                            scriptsContainer.appendChild(scriptCard);
+                        });
+                    } else {
+                        scriptsContainer.innerHTML = 'No scripts found.';
+                    }
+                } else {
+                    scriptsContainer.innerHTML = 'Error fetching data from API.';
+                }
+            } catch (error) {
+                scriptsContainer.innerHTML = 'Error fetching data.';
+            } finally {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        function copyScriptToClipboard(scriptCode) {
+            navigator.clipboard.writeText(scriptCode).then(() => {
+                alert('Script copied to clipboard!');
+            }).catch(err => {
+                alert('Failed to copy script.');
+                console.error('Error:', err);
+            });
+        }
+    </script>
+
+</body>
+</html>
